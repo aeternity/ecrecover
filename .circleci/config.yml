@@ -1,0 +1,53 @@
+version: 2.1
+
+executors:
+  ubuntu_1804:
+    docker:
+      - image: circleci/buildpack-deps:bionic
+  macos_1013:
+    macos:
+      xcode: "10.0.0"
+
+commands:
+  setup_ubuntu:
+    description: "Setup Ubuntu environment"
+    steps:
+      - run:
+          name: Setup environment
+          command: |
+            apt-get update && apt-get install build-essential cargo erlang cmake
+            curl https://sh.rustup.rs -sSf | sh -s -- -yq && source $HOME/.cargo/env
+  setup_macos:
+    description: "Setup macos environment"
+    steps:
+      - run:
+          name: Setup environment
+          command: |
+            brew update
+            brew install rust
+  run_build:
+    description: "Build"
+    steps:
+      - run:
+          name: Build
+          command: |
+            make
+
+jobs:
+  ubuntu_1804:
+    executor: ubuntu_1804
+    steps:
+      - checkout
+      - setup_ubuntu
+      - run_build
+  macos_1013:
+    executor: macos_1013
+    steps:
+      - checkout
+      - run_build
+
+workflows:
+  check:
+    jobs:
+      - ubuntu_1804
+      - macos_1013
