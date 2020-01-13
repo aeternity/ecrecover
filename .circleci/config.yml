@@ -24,7 +24,7 @@ commands:
           name: Setup environment
           command: |
             brew update
-            brew install rust
+            brew install rust cmake
   run_build:
     description: "Build"
     steps:
