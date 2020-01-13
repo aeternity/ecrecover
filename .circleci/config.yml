@@ -15,7 +15,7 @@ commands:
       - run:
           name: Setup environment
           command: |
-            apt-get update && apt-get install build-essential cargo erlang cmake
+            sudo apt-get update && sudo apt-get install build-essential cargo erlang cmake
             curl https://sh.rustup.rs -sSf | sh -s -- -yq && source $HOME/.cargo/env
   setup_macos:
     description: "Setup macos environment"
@@ -24,7 +24,8 @@ commands:
           name: Setup environment
           command: |
             brew update
-            brew install rust cmake
+            brew install rust cmake erlang@20
+            brew link --force erlang@20
   run_build:
     description: "Build"
     steps:
