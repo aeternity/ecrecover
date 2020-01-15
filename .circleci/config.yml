@@ -11,21 +11,47 @@ executors:
 commands:
   setup_ubuntu:
     description: "Setup Ubuntu environment"
+    parameters:
+      OTP_VERSION:
+        type: string
+        default: "20.3.8.23"
     steps:
       - run:
           name: Setup environment
           command: |
-            sudo apt-get update && sudo apt-get install build-essential cargo erlang cmake
+            sudo apt-get update \
+            && sudo apt-get \
+            install \
+            build-essential \
+            cargo \
+            cmake \
+            autoconf \
+            libncurses5-dev
+      - run:
+          name: Install OTP
+          command: |
+            curl -fsSL -o otp-src.tar.gz https://github.com/erlang/otp/archive/OTP-<< parameters.OTP_VERSION >>.tar.gz
+            tar -zxf otp-src.tar.gz --strip-components=1
+            ./otp_build autoconf && ./configure && make -j$(nproc) && sudo make install
+      - run:
+          name: Install rest
+          command: |
             curl https://sh.rustup.rs -sSf | sh -s -- -yq && source $HOME/.cargo/env
+
   setup_macos:
     description: "Setup macos environment"
+    parameters:
+      OTP_VERSION:
+        type: string
+        default: "20"
     steps:
       - run:
           name: Setup environment
           command: |
             brew update
-            brew install rust cmake erlang@20
-            brew link --force erlang@20
+            brew install rust cmake erlang@<< parameters.OTP_VERSION >>
+            brew link --force erlang@<< parameters.OTP_VERSION >>
+
   run_build:
     description: "Build"
     steps:
@@ -35,21 +61,37 @@ commands:
             make
 
 jobs:
-  ubuntu_1804:
+  ubuntu_1804_otp20:
     executor: ubuntu_1804
     steps:
       - checkout
       - setup_ubuntu
       - run_build
-  macos_1013:
+  ubuntu_1804_otp21:
+    executor: ubuntu_1804
+    steps:
+      - checkout
+      - setup_ubuntu:
+          OTP_VERSION: "21.0"
+      - run_build
+  macos_1013_otp20:
     executor: macos_1013
     steps:
       - checkout
       - setup_macos
       - run_build
+  macos_1013_otp21:
+    executor: macos_1013
+    steps:
+      - checkout
+      - setup_macos:
+          OTP_VERSION: "21"
+      - run_build
 
 workflows:
   check:
     jobs:
-      - ubuntu_1804
-      - macos_1013
+      - ubuntu_1804_otp20
+      - ubuntu_1804_otp21
+      - macos_1013_otp20
+      - macos_1013_otp21
